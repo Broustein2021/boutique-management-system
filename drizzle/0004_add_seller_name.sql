@@ -1,0 +1,1 @@
+ALTER TABLE "sales" ADD COLUMN "seller_name" varchar(160) DEFAULT 'Caisse' NOT NULL;
