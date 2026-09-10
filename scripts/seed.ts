@@ -25,6 +25,7 @@ const { hashPassword } = await import('../lib/password.ts')
 const db = drizzle(neon(process.env.DATABASE_URL))
 
 const demo = process.argv.includes('--demo')
+const empty = process.argv.includes('--empty')
 const force = process.argv.includes('--yes')
 
 const DEFAULT_PASSWORD = process.env.SEED_DEFAULT_PASSWORD ?? null
@@ -131,7 +132,75 @@ const inventory: [string, string, number, number][] = [
   ['Sous-vêtement', 'Culotte simple', 21, 5000],
 ]
 
-if (demo) {
+const now = new Date()
+const dayAt = (daysAgo: number, hour: number, minute = 0) => {
+  const d = new Date(now)
+  d.setDate(d.getDate() - daysAgo)
+  d.setHours(hour, minute, 0, 0)
+  return d
+}
+
+const cleanName = (category: string, product: string) => {
+  const tokens = product.trim().split(/\s+/)
+  const remaining = tokens.slice(1)
+  const first = remaining[0] ?? ''
+  const isCleanable =
+    tokens[0].toLowerCase() === category.toLowerCase() &&
+    remaining.length >= 2 &&
+    /^[a-zA-ZÀ-ÿ0-9]/.test(first)
+  return isCleanable ? remaining.join(' ') : product.trim()
+}
+
+console.log('→ Vidage des tables…')
+await db.delete(activityLog)
+await db.delete(refunds)
+await db.delete(sales)
+await db.delete(customers)
+await db.delete(stockMovements)
+await db.delete(expenses)
+await db.delete(products)
+await db.delete(users)
+
+let productRows: (typeof products.$inferSelect)[] = []
+if (!empty) {
+  console.log(`→ Import de l’inventaire (${inventory.length} références)…`)
+  const seq = new Map<string, number>()
+  const productValues = inventory.map(([category, product, quantity, price], index) => {
+    const code = CATEGORY_CODE[category] ?? 'ART'
+    const next = (seq.get(code) ?? 0) + 1
+    seq.set(code, next)
+    const name = cleanName(category, product)
+    return {
+      name,
+      sku: `${code}-${String(next).padStart(3, '0')}`,
+      category,
+      price,
+      purchasePrice: price > 0 ? Math.round(price * 0.5) : 0,
+      stock: quantity,
+      minStock: Math.max(3, Math.ceil(quantity * MIN_STOCK_PORTION)),
+      color: COLORS[index % COLORS.length],
+      initials: initialsOf(name),
+    }
+  })
+
+  productRows = await db.insert(products).values(productValues).returning()
+  const totalStockValue = productRows.reduce((sum, p) => sum + p.price * p.stock, 0)
+  console.log(`→ ${productRows.length} produits insérés, valeur de stock ${totalStockValue.toLocaleString('fr-FR')} FCFA`)
+
+  console.log('→ Mouvements de stock initiaux…')
+  await db.insert(stockMovements).values(
+    productRows.map((p) => ({
+      productId: p.id,
+      change: p.stock,
+      reason: 'Stock initial (inventaire du 02/09)',
+      createdAt: dayAt(7, 9),
+    })),
+  )
+} else {
+  console.log('→ Mode --empty : catalogue vierge, aucun produit inséré.')
+}
+
+if (demo && !empty) {
   const customers = [
     'Camille Dupont', 'Nina Kouassi', 'Sarah Martin', 'Aïcha Diallo', 'Fatou Ndiaye',
     'Grace Okonjo', 'Léa Moreau', 'Mariam Koné', 'Clara Dubois', 'Inès Traoré',
@@ -170,68 +239,6 @@ if (demo) {
     { label: 'Réassort fournisseur', category: 'Achats', amount: 212000, date: dayAt(27, 10) },
   ])
 }
-const now = new Date()
-const dayAt = (daysAgo: number, hour: number, minute = 0) => {
-  const d = new Date(now)
-  d.setDate(d.getDate() - daysAgo)
-  d.setHours(hour, minute, 0, 0)
-  return d
-}
-
-const cleanName = (category: string, product: string) => {
-  const tokens = product.trim().split(/\s+/)
-  const remaining = tokens.slice(1)
-  const first = remaining[0] ?? ''
-  const isCleanable =
-    tokens[0].toLowerCase() === category.toLowerCase() &&
-    remaining.length >= 2 &&
-    /^[a-zA-ZÀ-ÿ0-9]/.test(first)
-  return isCleanable ? remaining.join(' ') : product.trim()
-}
-
-console.log('→ Vidage des tables…')
-await db.delete(activityLog)
-await db.delete(refunds)
-await db.delete(sales)
-await db.delete(customers)
-await db.delete(stockMovements)
-await db.delete(expenses)
-await db.delete(products)
-await db.delete(users)
-
-console.log(`→ Import de l’inventaire (${inventory.length} références)…`)
-const seq = new Map<string, number>()
-const productValues = inventory.map(([category, product, quantity, price], index) => {
-  const code = CATEGORY_CODE[category] ?? 'ART'
-  const next = (seq.get(code) ?? 0) + 1
-  seq.set(code, next)
-  const name = cleanName(category, product)
-  return {
-    name,
-    sku: `${code}-${String(next).padStart(3, '0')}`,
-    category,
-    price,
-    purchasePrice: price > 0 ? Math.round(price * 0.5) : 0,
-    stock: quantity,
-    minStock: Math.max(3, Math.ceil(quantity * MIN_STOCK_PORTION)),
-    color: COLORS[index % COLORS.length],
-    initials: initialsOf(name),
-  }
-})
-
-const productRows = await db.insert(products).values(productValues).returning()
-const totalStockValue = productRows.reduce((sum, p) => sum + p.price * p.stock, 0)
-console.log(`→ ${productRows.length} produits insérés, valeur de stock ${totalStockValue.toLocaleString('fr-FR')} FCFA`)
-
-console.log('→ Mouvements de stock initiaux…')
-await db.insert(stockMovements).values(
-  productRows.map((p) => ({
-    productId: p.id,
-    change: p.stock,
-    reason: 'Stock initial (inventaire du 02/09)',
-    createdAt: dayAt(7, 9),
-  })),
-)
 
 console.log('→ Équipe…')
 const team = [
