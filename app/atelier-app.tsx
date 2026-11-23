@@ -1358,18 +1358,18 @@ function JournalSection({ activity }: { activity: InitialData['activity'] }) {
 function SettingsSection({ logo, busy, onPick, onClear }: { logo: string | null; busy: boolean; onPick: (file?: File | null) => void; onClear: () => void }) {
   return (
     <>
-      <PageHeading eyebrow="BOUTIQUE" title="ParamÃ¨tres" description="Personnalisez les Ã©lÃ©ments communs aux reÃ§us, exports PDF et Ã  la page de connexion." />
+      <PageHeading eyebrow="BOUTIQUE" title="Paramètres" description="Personnalisez les éléments communs aux reçus, exports PDF et à la page de connexion." />
       <section className="panel settings-panel">
-        <div className="panel-heading"><div><h2>Logo de la boutique</h2><p>ApparaÃ®t en tÃªte du reÃ§u (PDF et impression), des exports PDF et de lâ€™Ã©cran de connexion.</p></div></div>
+        <div className="panel-heading"><div><h2>Logo de la boutique</h2><p>Apparaît en tête du reçu (PDF et impression), des exports PDF et de l’écran de connexion.</p></div></div>
         <div className="settings-logo-row">
-          <div className="logo-preview">{logo ? <img src={logo} alt="Logo personnalisÃ© actuel" /> : <AppLogo size={54} />}</div>
+          <div className="logo-preview">{logo ? <img src={logo} alt="Logo personnalisé actuel" /> : <AppLogo size={54} />}</div>
           <div className="settings-logo-actions">
-            <p>{logo ? 'Un logo personnalisÃ© est actif.' : 'Aucun logo personnalisÃ© : le logo par dÃ©faut est utilisÃ©.'}</p>
+            <p>{logo ? 'Un logo personnalisé est actif.' : 'Aucun logo personnalisé : le logo par défaut est utilisé.'}</p>
             <div className="settings-logo-buttons">
-              <label className="primary-button logo-upload-label"><ImagePlus size={16} /> {busy ? 'Traitementâ€¦' : 'Importer un logo'}<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = '' }} /></label>
-              {logo && <button className="outline-button" onClick={onClear} disabled={busy}><RotateCcw size={15} /> Revenir au logo par dÃ©faut</button>}
+              <label className="primary-button logo-upload-label"><ImagePlus size={16} /> {busy ? 'Traitement…' : 'Importer un logo'}<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = '' }} /></label>
+              {logo && <button className="outline-button" onClick={onClear} disabled={busy}><RotateCcw size={15} /> Revenir au logo par défaut</button>}
             </div>
-            <small>PNG ou JPG Â· 2 Mo maximum Â· redimensionnÃ© Ã  256 px en conservant les proportions.</small>
+            <small>PNG ou JPG · 2 Mo maximum · redimensionné à 256 px en conservant les proportions.</small>
           </div>
         </div>
       </section>

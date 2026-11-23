@@ -27,20 +27,35 @@
 
 > **Principe** : l'inventaire du 02/09 (62 références, y compris les 8 lingerie à tailles estimées et le produit « Robe + par-dessus en dos » à prix 0) a été **entièrement supprimé** car ce sont des données de démonstration. La boutique saisit désormais son vrai stock directement dans l'application.
 
-## État réel de production (vérifié le 23/11/2026, après migrations)
+## État réel avant remise à zéro (23/11/2026, après migrations)
 | Chose | Quantité | Commentaire |
 |---|---|---|
 | Produits | 36 | Stock réel saisi par la boutique (plus aucune donnée de démo) |
 | Clientes au répertoire | 1 | |
-| Historique de ventes | 7 | Toutes liées à une facture (`sales.invoice_id` rempli) |
-| **Factures** | **7** | Backfill `0010` — total reconstitué **238 000 FCFA** |
+| Historique de ventes | 11 | Dont les lignes créées lors des tests du 23/11 |
+| **Factures** | **8** | Backfill `0010` (7) + 1 facture de test multi-articles |
+| Remboursements | 2 | Dont ceux créés lors des tests |
 | Dépenses | 0 | |
 | Comptes utilisateurs | 6 | 3 comptes initiaux + comptes créés depuis la reprise |
-| Réglages boutique | 1 | Ligne `store_settings` créée par `0011` (logo absent = repli) |
+| Réglages boutique | 1 | Ligne `store_settings` créée par `0011` |
 | Migrations appliquées | 12 | `0000` … `0011`, dont `create_invoice()` présent |
-| Période d'activité | 27/10 → 20/11/2026 | Date de la première à la dernière opération relevée |
+| Période d'activité | 27/10 → 23/11/2026 | Date de la première à la dernière opération relevée |
 
-> Ce tableau remplace, pour le suivi courant, l'état « base vierge » du 10/09 ci-dessus : la boutique a repris son activité sur l'application déployée.
+> Ce tableau est **historique** : il décrit l’état sauvegardé juste avant la remise à zéro du 23/11/2026.
+
+## État actuel — base vidée pour la formation du 24/11/2026
+Remise à zéro exécutée le **23/11/2026 à 14:16 UTC** via `pnpm db:reset-data -- --yes`.
+
+| Chose | Quantité | Commentaire |
+|---|---|---|
+| Produits / ventes / factures | 0 | Séquences remises à 1 |
+| Remboursements / clientes / dépenses | 0 | |
+| Mouvements de stock / journal d’activité | 0 | |
+| Comptes utilisateurs | 6 | **Conservés**, mots de passe inchangés |
+| Logo boutique | Conservé | Réglage `store_settings` non supprimé |
+| Migrations appliquées | 12 | Inchangées |
+
+> Sauvegarde complète (CSV de 10 tables + journal Drizzle) dans `_archive\boutique-management-system\neon-20261123-141552-avant-formation\`.
 
 ## Avant de remettre à la boutique
 - [ ] **Transmettre les mots de passe initiaux en main propre** (jamais par ce dépôt).
@@ -59,7 +74,7 @@
 
 ## Scénarios de recette (à rejouer ensemble)
 ### Socle (existant, à ne pas casser)
-- [ ] Connexion des 3 comptes ; comptes Suspendus => refusés ; 5 échecs => verrouillage 15 min.
+- [ ] Connexion des 3 comptes ; comptes Suspendus => refusés ; 5 échecs => verrouillage 10 min.
 - [ ] Ajout d'un produit **avec photo et tailles** (S/M/L/XL) → visible au catalogue, colonne « TAILLES » au stock.
 - [ ] Vente avec taille : sélection M, panier, encaissement, reçu **écran** + **PDF** (+ impayé WhatsApp).
 - [ ] Vente d'un produit non taillé ; paiement Carte bancaire / Mobile Money / Espèces.
@@ -128,6 +143,12 @@
 - `drizzle/0010_invoices.sql` (snapshot `0010`) : `invoices`, `sales.invoice_id` + FK + index, colonne temporaire `legacy_sale_id`, backfill des ventes existantes, fonction `public.create_invoice(p_customer_id, p_customer_name, p_payment_method, p_seller_name, p_items jsonb)` — valide quantité (1–999), prix (0–1 000 000), stock, taille, article archivé ; écrit facture + lignes + mouvements de stock en **un seul appel SQL** ; supprime la colonne temporaire.
 - `drizzle/0011_store_settings.sql` (snapshot `0011`) : `store_settings` (logo data URL, une seule ligne) + ligne par défaut.
 
+## Documentation livrée
+- **`CAHIER_DE_RECETTE.md`** : 32 scénarios numérotés (REC-01 → REC-32), procédures, résultats attendus, statuts et suivi des anomalies.
+- **`TRACEABILITE.md`** : architecture, modèle de données, flux métier (vente, export, logo, sécurité), matrice exigence → code → recette, commandes et limites.
+- **`MANUEL_UTILISATEUR.md`** : guide pratique par rôle (connexion, caisse multi-articles, remboursement, catalogue, stock, exports, paramètres, compte, dépannage), avec l’état des données après vidage.
+- **`CODE_COMPLET.md`** (hors dépôt, dans `_archive\boutique-management-system\livraison-20261123\`) : code intégral des fichiers modifiés/créés de la livraison initiale.
+
 ## Démarrage local
 ```bash
 pnpm install
@@ -136,7 +157,10 @@ pnpm build    # build de production (tsc inclus)
 pnpm exec tsc --noEmit
 pnpm db:generate   # nouvelle migration (après modification de db/schema.ts)
 pnpm db:migrate    # applique les migrations (no-op si à jour)
-pnpm db:seed -- --empty --yes   # (DESTRUCTIF) base vierge, garde les 3 comptes ; SEED_DEFAULT_PASSWORD=... requis
+pnpm db:backup                    # sauvegarde CSV datée (UTILE avant toute manipulation)
+pnpm db:reset-data -- --yes       # vide les données métier, garde les 6 comptes + le logo
+pnpm db:seed -- --empty --yes     # (DESTRUCTIF) supprime AUSSI les comptes et recrée les 3 comptes initiaux :
+                                  # SEED_DEFAULT_PASSWORD=... requis
 ```
 > `npm` fonctionne aussi ; le dépôt utilise **pnpm** et son `pnpm-lock.yaml` (ne pas mélanger les deux gestionnaires).
 
