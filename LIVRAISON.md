@@ -60,8 +60,7 @@ Remise à zéro exécutée le **23/11/2026 à 14:16 UTC** via `pnpm db:reset-dat
 ## Avant de remettre à la boutique
 - [ ] **Transmettre les mots de passe initiaux en main propre** (jamais par ce dépôt).
 - [ ] **Photographier et saisir le stock réel** : Catalogue → Ajouter un produit (photo, prix, coût d'achat, stock, seuil min., tailles si lingerie).
-- [ ] Décision boutique : **hébergement** (local sur poste boutique vs mise en ligne) — voir « Déploiement ».
-- [ ] **Redéployer** pour que les 3 nouvelles fonctionnalités soient visibles en production (le commit livré n’y est pas encore déployé, voir « Production — lien client »).
+- [x] **Hébergement retenu** : mise en ligne sur Vercel (projet `gestionas`), déploiement final effectué le **23/11/2026** (voir « Production — lien client »).
 - [ ] Tests de recette (cf. ci-dessous).
 
 ## Comptes et mots de passe
@@ -115,25 +114,32 @@ Remise à zéro exécutée le **23/11/2026 à 14:16 UTC** via `pnpm db:reset-dat
 - [ ] Après une migration, refaire un export logique Neon dans `_archive\boutique-management-system\` (l’export du 23/11 11:54 est **antérieur** aux migrations `0010`/`0011`).
 
 ## Production — lien client
-- **URL officielle : https://gestionas.vercel.app** (projet Vercel « gestionas », vérifiée le 10/09/2026 puis le 23/11/2026 : connexion, tableau de bord, ventes & produits OK, aucune erreur console).
-- Variables d'environnement définies sur Vercel (Production/Preview/Development), copiées depuis `.env.local` : `DATABASE_URL`, `AUTH_SECRET` — **jamais** committées.
-- La « Deployment Protection » (authentification Vercel) a été **désactivée** pour que les clientes accèdent sans compte Vercel.
-- ⚠️ `boutique-management-system.vercel.app` n'est **pas** notre app (nom global déjà pris par un autre projet) — ne jamais donner ce lien.
+- **URL officielle : https://gestionas.vercel.app** — ✅ **nouvelle version en ligne le 23/11/2026** (déploiement `dpl_GbvfuciE8kFabG1m75KPacv161dx`, état `READY`). Contrôle effectué : `/` → 307 vers `/login`, `/login` → 200, `/logo.jpg` → 200.
+- Variables d'environnement définies sur Vercel (Production/Preview/Development) : uniquement `DATABASE_URL` (hôte **`ep-wild-sky-ayeobzgc-pooler.c-5.us-east-2.aws.neon.tech`**, base `neondb`) et `AUTH_SECRET` — **jamais** committées. Vérifié le 23/11/2026 après déconnexion de Supabase.
+- La « Deployment Protection » (authentification Vercel) reste **désactivée** : les clientes accèdent sans compte Vercel.
+- ✅ Le domaine officiel `gestionas.vercel.app` a été **réassigné** au nouveau déploiement (il pointait encore sur l’ancien `dpl_A3b1GCAmUspCEL12qmncDNah6bw6`, servi en cache). Il sert désormais exactement les mêmes fichiers que `gestionas-sdtmici-services.vercel.app` (contrôle octet par octet du HTML et des 9 chunks JS).
+- ⚠️ `boutique-management-system.vercel.app` n'est **pas** notre app (nom global déjà pris par un autre projet) — ne jamais donner ce lien. Alias valides : `gestionas.vercel.app`, `gestionas-sdtmici-services.vercel.app`, `boutique-management-system-ashen.vercel.app`.
 - Les données restent hébergées par Neon (base partagée local ↔ production) ; photos produits **et logo** stockés en base.
-- Redéploiement : dans ce dossier, `vercel --prod` (nécessite un token Vercel, révocable). Optionnel : connecter GitHub (*Settings → Git*) pour un déploiement automatique à chaque `git push`.
-- ⚠️ Le code des 3 nouvelles tâches est commité mais **pas encore déployé** : la production tourne sur l’ancien commit tant qu’un redéploiement n’est pas fait.
+- ✅ **Lien Vercel ↔ GitHub finalisé** : dépôt `Broustein2021/boutique-management-system`, branche `main`. Un `git push` déclenche un déploiement. Redéploiement manuel possible avec `vercel deploy --prod --yes` dans ce dossier (build distant). La méthode `--prebuilt` est à éviter avec Next.js 16 (erreur sur un fichier de l’output précompilé).
+
+### Incident de déploiement du 23/11/2026 — cause et résolution
+- **Symptôme** : tous les déploiements échouaient avant le build avec `BUILD_ERROR: Resource provisioning failed` (CLI, Git, preview, et même redéploiement d’une ancienne version READY).
+- **Cause** : le projet Vercel avait un store **Supabase** (`supabase-cerulean-castle`, projet `sdvyaitemyqaajirghps`) lié en `preview + production`, déclaré `deployments.required: true` et **suspendu** (plan gratuit inactif). Vercel tentait de le provisionner à chaque déploiement, indépendamment de `DATABASE_URL` qui pointe sur Neon.
+- **Résolution (action humaine obligatoire)** : déconnexion du store via `vercel storage disconnect supabase-cerulean-castle --project gestionas` (confirmation interactive). Seules les 16 variables `POSTGRES_*`, `SUPABASE_*`, `NEXT_PUBLIC_SUPABASE_*` (inutilisées) ont été retirées ; `DATABASE_URL` et `AUTH_SECRET` conservées.
+- **Vérification** : `vercel storage status --project gestionas` → « No storage resources are connected ». Déploiement suivant → `READY`.
+- **À surveiller** : si un nouveau store Supabase est lié au projet et suspendu, le problème reviendra. Garder le projet sans intégration Supabase (l’appli n’en a pas besoin).
 
 ### Vérification du 23/11/2026 (API Vercel, lecture seule)
 - Projet Vercel `gestionas` (Next.js) : **3 déploiements `READY`** en production, tous sur le commit `b3a4c68d42c2004cc43e188d5e6817598cc094e2`, identique au `HEAD` local au moment de la vérification. Le plus récent date du **27/10/2026 09:51 UTC**.
 - Alias relevés : `gestionas-sdtmici-services.vercel.app` et `boutique-management-system-ashen.vercel.app`.
 - `DATABASE_URL` et `AUTH_SECRET` présents sur Vercel : après déchiffrement via l'API, **identiques** à ceux de `.env.local` (même endpoint Neon `ep-wild-sky-ayeobzgc-pooler...`, même base `neondb`, même utilisateur, même mot de passe).
 - `DATABASE_URL` modifiée sur Vercel le **27/10/2026 09:49 UTC**, juste avant le redéploiement (09:51) et la reprise des données dans Neon (09:55) : chronologie cohérente.
-- Le projet Vercel n'était **pas lié à GitHub** (déploiements manuels via `vercel --prod`) ; la connexion au dépôt `Broustein2021/boutique-management-system` a été tentée le 23/11/2026 mais reste à finaliser avec un token en écriture (voir « Suivi des mises à jour »).
+- Le projet Vercel est désormais **lié à GitHub** (`Broustein2021/boutique-management-system`, branche `main`) ; la liaison, tentative infructueuse plus tôt dans la journée, a été finalisée par le propriétaire le 23/11/2026 (voir « Suivi des mises à jour »).
 - ⚠️ Le token Vercel utilisé pour ces vérifications doit être **révoqué** après usage (il permet de lire les secrets en clair).
 
 ## Suivi des mises à jour (23/11/2026)
 - **GitHub** : premier push effectué le 23/11/2026 (commit `e3f67a0819fc08188f5948e78224c1321fb1a6f6`), suivi des commits de suivi du statut. Le dépôt `Broustein2021/boutique-management-system` n'est plus vide : il contient l'intégralité de l'historique local (les 4 commits d'origine + les commits de mise à jour du 23/11/2026).
-- **Lien Vercel ↔ GitHub** : **non finalisé**. Le token fourni est en lecture seule : `POST /v9/projects/{id}/link` et `PATCH /v9/projects/{id}` répondent `403 Forbidden / Not authorized`. À faire depuis le dashboard Vercel : *Settings → Git → Connect Git Repository* → `Broustein2021/boutique-management-system`, branche de production `main`, puis vérifier qu'un déploiement se déclenche sur un `git push`.
+- **Lien Vercel ↔ GitHub** : ✅ **finalisé** par le propriétaire le 23/11/2026 — `link.type = github`, repo `Broustein2021/boutique-management-system`, `productionBranch = main`. Un commit vide (`d06e905`) poussé sur `main` a bien déclenché un déploiement Vercel (source `git`), confirmant le fonctionnement du lien.
 - **Sauvegarde Neon** : export logique complet (CSV de toutes les tables + 10 migrations + journal) dans `_archive\boutique-management-system\neon-20261123-115435-logique\`. Le `pg_dump` local (v17) ne peut pas dumper un serveur v18, d'où le format CSV.
 - **Journal Drizzle** : la migration `0008_add_customers` était absente des 9 entrées de `drizzle.__drizzle_migrations` alors que la table `customers` et `sales.customer_id` existaient déjà. Elle a été **réconciliée** le 23/11/2026 par ajout de son empreinte SHA256 (`cfbaeb84e86069dac8bf635205feb6e3e8ebd35d75dcd907ca6a1604a8b03c0b`) avec l'horodatage du journal local — **sans réexécuter son SQL**. Le journal contient désormais **12 entrées** / **12 snapshots**, séquence `0..11` validée.
 - **Migrations `0010_invoices` et `0011_store_settings`** : appliquées le 23/11/2026 via `pnpm db:migrate`. Vérification en base : `invoices = 7` (total 238 000), `sales liées = 7/7`, `store_settings = 1`, `pg_proc.create_invoice = 1`, `drizzle.__drizzle_migrations = 12`.
