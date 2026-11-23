@@ -1,76 +1,90 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1788913458923,
-      "tag": "0000_shocking_joshua_kane",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1788914770895,
-      "tag": "0001_puzzling_northstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1788946425423,
-      "tag": "0002_wakeful_master_mold",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1788949227860,
-      "tag": "0003_lethal_the_order",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1788951181914,
-      "tag": "0004_add_seller_name",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1788956761923,
-      "tag": "0005_add_purchase_price",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1788957468444,
-      "tag": "0006_add_refunds",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1788957849944,
-      "tag": "0007_add_activity_log",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1788960000000,
-      "tag": "0008_add_customers",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1788970000000,
-      "tag": "0009_add_product_sizes",
-      "breakpoints": true
-    }
-  ]
+    "version":  "7",
+    "dialect":  "postgresql",
+    "entries":  [
+                    {
+                        "idx":  0,
+                        "version":  "7",
+                        "when":  1788913458923,
+                        "tag":  "0000_shocking_joshua_kane",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  1,
+                        "version":  "7",
+                        "when":  1788914770895,
+                        "tag":  "0001_puzzling_northstar",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  2,
+                        "version":  "7",
+                        "when":  1788946425423,
+                        "tag":  "0002_wakeful_master_mold",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  3,
+                        "version":  "7",
+                        "when":  1788949227860,
+                        "tag":  "0003_lethal_the_order",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  4,
+                        "version":  "7",
+                        "when":  1788951181914,
+                        "tag":  "0004_add_seller_name",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  5,
+                        "version":  "7",
+                        "when":  1788956761923,
+                        "tag":  "0005_add_purchase_price",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  6,
+                        "version":  "7",
+                        "when":  1788957468444,
+                        "tag":  "0006_add_refunds",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  7,
+                        "version":  "7",
+                        "when":  1788957849944,
+                        "tag":  "0007_add_activity_log",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  8,
+                        "version":  "7",
+                        "when":  1788960000000,
+                        "tag":  "0008_add_customers",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  9,
+                        "version":  "7",
+                        "when":  1788970000000,
+                        "tag":  "0009_add_product_sizes",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  10,
+                        "version":  "7",
+                        "when":  1795437417354,
+                        "tag":  "0010_invoices",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  11,
+                        "version":  "7",
+                        "when":  1795437857535,
+                        "tag":  "0011_store_settings",
+                        "breakpoints":  true
+                    }
+                ]
 }

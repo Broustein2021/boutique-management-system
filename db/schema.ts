@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, serial, text, timestamp, varchar, uniqueIndex } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, jsonb, pgTable, serial, text, timestamp, varchar, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const products = pgTable(
   'products',
@@ -29,21 +29,41 @@ export const customers = pgTable('customers', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const sales = pgTable('sales', {
-  id: serial('id').primaryKey(),
-  productId: integer('product_id')
-    .notNull()
-    .references(() => products.id),
-  customerId: integer('customer_id').references(() => customers.id),
-  customerName: varchar('customer_name', { length: 160 }).notNull().default('Cliente'),
-  quantity: integer('quantity').notNull().default(1),
-  unitPrice: integer('unit_price').notNull(),
-  purchasePrice: integer('purchase_price').notNull().default(0),
-  paymentMethod: varchar('payment_method', { length: 40 }).notNull().default('Espèces'),
-  sellerName: varchar('seller_name', { length: 160 }).notNull().default('Caisse'),
-  size: varchar('size', { length: 40 }),
-  soldAt: timestamp('sold_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const invoices = pgTable(
+  'invoices',
+  {
+    id: serial('id').primaryKey(),
+    customerId: integer('customer_id').references(() => customers.id),
+    customerName: varchar('customer_name', { length: 160 }).notNull().default('Cliente'),
+    paymentMethod: varchar('payment_method', { length: 40 }).notNull().default('Espèces'),
+    sellerName: varchar('seller_name', { length: 160 }).notNull().default('Caisse'),
+    itemCount: integer('item_count').notNull().default(0),
+    total: integer('total').notNull().default(0),
+    soldAt: timestamp('sold_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('invoices_sold_at_idx').on(table.soldAt)],
+)
+
+export const sales = pgTable(
+  'sales',
+  {
+    id: serial('id').primaryKey(),
+    invoiceId: integer('invoice_id').references(() => invoices.id),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id),
+    customerId: integer('customer_id').references(() => customers.id),
+    customerName: varchar('customer_name', { length: 160 }).notNull().default('Cliente'),
+    quantity: integer('quantity').notNull().default(1),
+    unitPrice: integer('unit_price').notNull(),
+    purchasePrice: integer('purchase_price').notNull().default(0),
+    paymentMethod: varchar('payment_method', { length: 40 }).notNull().default('Espèces'),
+    sellerName: varchar('seller_name', { length: 160 }).notNull().default('Caisse'),
+    size: varchar('size', { length: 40 }),
+    soldAt: timestamp('sold_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('sales_invoice_id_idx').on(table.invoiceId)],
+)
 
 export const activityLog = pgTable('activity_log', {
   id: serial('id').primaryKey(),
@@ -91,8 +111,15 @@ export const users = pgTable('users', {
   initials: varchar('initials', { length: 4 }).notNull().default('AM'),
 })
 
+export const storeSettings = pgTable('store_settings', {
+  id: serial('id').primaryKey(),
+  logo: text('logo'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type Product = typeof products.$inferSelect
 export type Customer = typeof customers.$inferSelect
+export type Invoice = typeof invoices.$inferSelect
 export type Sale = typeof sales.$inferSelect
 export type StockMovement = typeof stockMovements.$inferSelect
 export type Expense = typeof expenses.$inferSelect

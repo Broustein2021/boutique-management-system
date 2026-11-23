@@ -8,6 +8,7 @@ export type Section =
   | 'clientes'
   | 'utilisateurs'
   | 'journal'
+  | 'parametres'
 
 export type ProductDTO = {
   id: number
@@ -25,19 +26,48 @@ export type ProductDTO = {
   sizes: Record<string, number> | null
 }
 
+export type ReceiptLine = {
+  id: number
+  productId: number
+  article: string
+  sku: string
+  size: string | null
+  quantity: number
+  unitPrice: number
+  subtotal: number
+}
+
 export type ReceiptData = {
   id: number
+  invoiceId: number
   dateLabel: string
   hourLabel: string
   customer: string
+  lines: ReceiptLine[]
+  // Champs de la première ligne, conservés pour les écrans/exports historiques.
   article: string
   sku: string
   quantity: number
   unitPrice: number
   total: number
+  /** Total de la facture entière (utile pour un reçu ouvert depuis une ligne de l'historique). */
+  invoiceTotal?: number
   method: string
   seller: string
   size?: string | null
+}
+
+export type CartLine = {
+  key: string
+  productId: number
+  article: string
+  sku: string
+  color: string
+  initials: string
+  size: string | null
+  quantity: number
+  unitPrice: number
+  available: number
 }
 
 export type SaleDTO = ReceiptData & { time: string; soldAt: string; refunded: boolean; customerId: number | null }
@@ -116,6 +146,7 @@ export type InitialData = {
   topProducts: TopProduct[]
   activity: ActivityDTO[]
   customers: CustomerDTO[]
+  storeLogo: string | null
   todayLabel: string
   historyLabel: string
 }

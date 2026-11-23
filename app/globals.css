@@ -193,3 +193,47 @@ body { font-size: 15.5px; }
 .size-cell b { color: #5b3a41; }
 .article-size { color: var(--primary); font-weight: 700; }
 .form-error { color: #c0392b; font-size: 11.5px; margin: 4px 0 0; }
+
+/* Facture multi-articles (caisse) */
+.sale-modal-cart { width: min(680px, 100%); max-height: min(92vh, 900px); overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.cart-picker { background: #fbf7f6; border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.cart-search-list { max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.cart-search-item { display: flex; align-items: center; gap: 10px; width: 100%; border: 1px solid transparent; background: transparent; border-radius: 9px; padding: 6px 8px; text-align: left; color: var(--foreground); }
+.cart-search-item:hover { background: #fff; }
+.cart-search-item.selected { border-color: #d9b6c1; background: #fff; }
+.cart-search-item .product-thumb { width: 30px; height: 30px; flex: 0 0 30px; }
+.cart-search-name { flex: 1; min-width: 0; }
+.cart-search-name strong { display: block; font-size: 12px; }
+.cart-search-name small { display: block; color: var(--muted-foreground); font-size: 10px; margin-top: 2px; }
+.cart-search-item b { color: var(--primary); font-size: 12px; white-space: nowrap; }
+.cart-add-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.cart-add-row .form-label { flex: 1; min-width: 110px; }
+.cart-add-row .primary-button { min-height: 38px; }
+.cart-lines { display: flex; flex-direction: column; gap: 6px; }
+.cart-line { display: grid; grid-template-columns: minmax(120px, 1fr) 78px 92px auto 30px; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; background: #fff; }
+.cart-line-info { min-width: 0; }
+.cart-line-info strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart-line-info span { display: block; color: var(--muted-foreground); font-size: 10px; margin-top: 2px; }
+.cart-field { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted-foreground); }
+.cart-field input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 6px 7px; font-size: 12px; color: var(--foreground); background: #fff; }
+.cart-field input:disabled { background: #f6f3f3; color: var(--muted-foreground); }
+.cart-subtotal { color: var(--primary); font-size: 12px; white-space: nowrap; text-align: right; }
+@media (max-width: 620px) { .cart-line { grid-template-columns: 1fr 70px 30px; }.cart-field:nth-of-type(2) { grid-column: 2; }.cart-subtotal { grid-column: 1; }.cart-line > .icon-button { grid-column: 3; grid-row: 1 / span 2; }.cart-add-row .primary-button { width: 100%; } }
+
+/* Exports CSV / PDF */
+.export-actions { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.export-actions .outline-button { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Logo configurable (paramètres + reçu) */
+.settings-panel { max-width: 760px; }
+.settings-logo-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; padding: 8px 0 4px; }
+.logo-preview { width: 96px; height: 96px; flex: 0 0 96px; border: 1px dashed #ddd0d2; border-radius: 14px; background: #fdfaf9; display: grid; place-items: center; overflow: hidden; }
+.logo-preview img { max-width: 84px; max-height: 84px; object-fit: contain; }
+.settings-logo-actions { flex: 1; min-width: 240px; }
+.settings-logo-actions p { margin: 0 0 12px; font-size: 13px; color: var(--foreground); }
+.settings-logo-actions small { display: block; margin-top: 10px; color: var(--muted-foreground); font-size: 11px; }
+.settings-logo-buttons { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.logo-upload-label { position: relative; overflow: hidden; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.logo-upload-label input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.receipt-logo { display: block; max-width: 64px; max-height: 46px; width: auto; height: auto; object-fit: contain; margin: 0 auto 8px; }
+@media (max-width: 620px) { .settings-logo-row { flex-direction: column; align-items: flex-start; }.settings-logo-buttons { width: 100%; }.settings-logo-buttons .primary-button, .settings-logo-buttons .outline-button { flex: 1; justify-content: center; } }

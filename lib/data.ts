@@ -1,8 +1,8 @@
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import { db } from './db'
 import { can } from './permissions'
-import { activityLog, customers, expenses, products, refunds, sales, users } from '../db/schema'
+import { activityLog, customers, expenses, products, refunds, sales, storeSettings, users } from '../db/schema'
 import type {
   InitialData,
 } from './types'
@@ -40,9 +40,23 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw lastError
 }
 
+/** Logo configuré dans les réglages. Repli silencieux si la table n'existe pas encore. */
+export async function getStoreLogo(): Promise<string | null> {
+  try {
+    const [row] = await db
+      .select({ logo: storeSettings.logo })
+      .from(storeSettings)
+      .where(eq(storeSettings.id, 1))
+      .limit(1)
+    return row?.logo ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getDashboardData(role?: string | null): Promise<InitialData> {
   const now = new Date()
-  const [productRows, saleRows, expenseRows, userRows, refundRows, logRows, customerRows] = await withRetry(() =>
+  const [productRows, saleRows, expenseRows, userRows, refundRows, logRows, customerRows, logoRows] = await withRetry(() =>
     Promise.all([
       db.select().from(products).orderBy(products.id),
       db.select().from(sales).orderBy(desc(sales.soldAt)),
@@ -51,12 +65,38 @@ export async function getDashboardData(role?: string | null): Promise<InitialDat
       db.select().from(refunds),
       db.select().from(activityLog).orderBy(desc(activityLog.createdAt)).limit(60),
       db.select().from(customers).orderBy(customers.id),
+      getStoreLogo().then((logo) => (logo ? [{ logo }] : [])),
     ]),
   )
   const refundedIds = new Set(refundRows.map((r) => r.saleId))
 
   const productById = new Map(productRows.map((p) => [p.id, p]))
   const activeRows = productRows.filter((p) => p.isActive)
+
+  // Une facture = plusieurs lignes `sales`. On regroupe ces lignes pour que le reçu
+  // ouvert depuis l'historique affiche l'ensemble de l'achat, y compris les anciennes
+  // ventes mono-article (sans invoice_id, reconstituées à la migration 0010).
+  type ReceiptLineDTO = InitialData['sales'][number]['lines'][number]
+  const invoiceKeyOf = (sale: (typeof saleRows)[number]) => sale.invoiceId ?? sale.id
+  const linesByInvoice = new Map<number, ReceiptLineDTO[]>()
+  const invoiceTotals = new Map<number, number>()
+  for (const sale of saleRows) {
+    const key = invoiceKeyOf(sale)
+    const product = productById.get(sale.productId)
+    const list = linesByInvoice.get(key) ?? []
+    list.push({
+      id: sale.id,
+      productId: sale.productId,
+      article: product?.name ?? 'Article',
+      sku: product?.sku ?? '',
+      size: sale.size ?? null,
+      quantity: sale.quantity,
+      unitPrice: sale.unitPrice,
+      subtotal: sale.unitPrice * sale.quantity,
+    })
+    linesByInvoice.set(key, list)
+    invoiceTotals.set(key, (invoiceTotals.get(key) ?? 0) + sale.unitPrice * sale.quantity)
+  }
 
   const canSeeCosts = can(role, 'catalog') || can(role, 'stock')
   const canSeeUsers = can(role, 'users')
@@ -166,18 +206,34 @@ export async function getDashboardData(role?: string | null): Promise<InitialDat
 
   const saleDTO = (sale: (typeof saleRows)[number]): InitialData['sales'][number] => {
     const product = productById.get(sale.productId)
+    const invoiceKey = invoiceKeyOf(sale)
+    const productName = product?.name ?? 'Article'
+    const productSku = product?.sku ?? ''
+    const lineTotal = sale.unitPrice * sale.quantity
     return {
       id: sale.id,
+      invoiceId: invoiceKey,
       customerId: sale.customerId ?? null,
       customer: sale.customerName,
-      article: product?.name ?? 'Article',
-      sku: product?.sku ?? '',
+      article: productName,
+      sku: productSku,
       quantity: sale.quantity,
-unitPrice: sale.unitPrice,
-    total: sale.unitPrice * sale.quantity,
-    method: sale.paymentMethod.replace('Carte bancaire', 'Carte'),
-    size: sale.size ?? null,
-    time: frHour.format(new Date(sale.soldAt)),
+      unitPrice: sale.unitPrice,
+      total: lineTotal,
+      invoiceTotal: invoiceTotals.get(invoiceKey) ?? lineTotal,
+      lines: linesByInvoice.get(invoiceKey) ?? [{
+        id: sale.id,
+        productId: sale.productId,
+        article: productName,
+        sku: productSku,
+        size: sale.size ?? null,
+        quantity: sale.quantity,
+        unitPrice: sale.unitPrice,
+        subtotal: lineTotal,
+      }],
+      method: sale.paymentMethod.replace('Carte bancaire', 'Carte'),
+      size: sale.size ?? null,
+      time: frHour.format(new Date(sale.soldAt)),
       soldAt: sale.soldAt.toISOString(),
       dateLabel: frHistory.format(new Date(sale.soldAt)),
       hourLabel: frHour.format(new Date(sale.soldAt)),
@@ -269,6 +325,7 @@ unitPrice: sale.unitPrice,
     topProducts,
     activity: canSeeActivity ? activityDTO : [],
     customers: customersDTO,
+    storeLogo: logoRows[0]?.logo ?? null,
     todayLabel,
     historyLabel,
   }
