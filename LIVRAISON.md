@@ -75,10 +75,12 @@
 - Alias relevés : `gestionas-sdtmici-services.vercel.app` et `boutique-management-system-ashen.vercel.app`.
 - `DATABASE_URL` et `AUTH_SECRET` présents sur Vercel : après déchiffrement via l'API, **identiques** à ceux de `.env.local` (même endpoint Neon `ep-wild-sky-ayeobzgc-pooler...`, même base `neondb`, même utilisateur, même mot de passe).
 - `DATABASE_URL` modifiée sur Vercel le **27/10/2026 09:49 UTC**, juste avant le redéploiement (09:51) et la reprise des données dans Neon (09:55) : chronologie cohérente.
-- Le projet Vercel n'était **pas lié à GitHub** (déploiements manuels via `vercel --prod`) ; la connexion au dépôt `Broustein2021/boutique-management-system` est réalisée dans le cadre de la mise à jour du 23/11/2026.
+- Le projet Vercel n'était **pas lié à GitHub** (déploiements manuels via `vercel --prod`) ; la connexion au dépôt `Broustein2021/boutique-management-system` a été tentée le 23/11/2026 mais reste à finaliser avec un token en écriture (voir « Suivi des mises à jour »).
 - ⚠️ Le token Vercel utilisé pour ces vérifications doit être **révoqué** après usage (il permet de lire les secrets en clair).
 
 ## Suivi des mises à jour (23/11/2026)
+- **GitHub** : premier push effectué le 23/11/2026 — `main` pointe sur `e3f67a0819fc08188f5948e78224c1321fb1a6f6`. Le dépôt `Broustein2021/boutique-management-system` n'est plus vide.
+- **Lien Vercel ↔ GitHub** : **non finalisé**. Le token fourni est en lecture seule : `POST /v9/projects/{id}/link` et `PATCH /v9/projects/{id}` répondent `403 Forbidden / Not authorized`. À faire depuis le dashboard Vercel : *Settings → Git → Connect Git Repository* → `Broustein2021/boutique-management-system`, branche de production `main`, puis vérifier qu'un déploiement se déclenche sur un `git push`.
 - **Sauvegarde Neon** : export logique complet (CSV de toutes les tables + 10 migrations + journal) dans `_archive\boutique-management-system\neon-20261123-115435-logique\`. Le `pg_dump` local (v17) ne peut pas dumper un serveur v18, d'où le format CSV.
 - **Journal Drizzle** : la migration `0008_add_customers` était absente des 9 entrées de `drizzle.__drizzle_migrations` alors que la table `customers` et `sales.customer_id` existaient déjà. Elle a été **réconciliée** le 23/11/2026 par ajout de son empreinte SHA256 (`cfbaeb84e86069dac8bf635205feb6e3e8ebd35d75dcd907ca6a1604a8b03c0b`) avec l'horodatage du journal local — **sans réexécuter son SQL**. Le journal contient désormais **10 entrées**, dont les hashes correspondent exactement aux 10 fichiers `drizzle/*.sql` locaux.
 - **Conséquence** : `npm run db:migrate` est de nouveau sûr (no-op) sur cette base. `npm run db:seed` reste **destructif** et interdit en production.
